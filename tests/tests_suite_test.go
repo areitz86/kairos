@@ -74,35 +74,35 @@ var _ = BeforeSuite(func() {
 
 })
 
-func gatherLogs() {
-	Sudo("k3s kubectl get pods -A -o json > /run/pods.json")
-	Sudo("k3s kubectl get events -A -o json > /run/events.json")
-	Sudo("cat /proc/cmdline > /run/cmdline")
-	Sudo("chmod 777 /run/events.json")
+func gatherLogs(vm VM) {
+	vm.Sudo("k3s kubectl get pods -A -o json > /run/pods.json")
+	vm.Sudo("k3s kubectl get events -A -o json > /run/events.json")
+	vm.Sudo("cat /proc/cmdline > /run/cmdline")
+	vm.Sudo("chmod 777 /run/events.json")
 
-	Sudo("df -h > /run/disk")
-	Sudo("mount > /run/mounts")
-	Sudo("blkid > /run/blkid")
+	vm.Sudo("df -h > /run/disk")
+	vm.Sudo("mount > /run/mounts")
+	vm.Sudo("blkid > /run/blkid")
 
-	GatherAllLogs(
-		[]string{
-			"edgevpn@kairos",
-			"kairos-agent",
-			"cos-setup-boot",
-			"cos-setup-network",
-			"kairos",
-			"k3s",
-		},
-		[]string{
-			"/var/log/edgevpn.log",
-			"/var/log/kairos/agent.log",
-			"/run/pods.json",
-			"/run/disk",
-			"/run/mounts",
-			"/run/blkid",
-			"/run/events.json",
-			"/run/cmdline",
-		})
+	//GatherAllLogs(
+	//	[]string{
+	//		"edgevpn@kairos",
+	//		"kairos-agent",
+	//		"cos-setup-boot",
+	//		"cos-setup-network",
+	//		"kairos",
+	//		"k3s",
+	//	},
+	//	[]string{
+	//		"/var/log/edgevpn.log",
+	//		"/var/log/kairos/agent.log",
+	//		"/run/pods.json",
+	//		"/run/disk",
+	//		"/run/mounts",
+	//		"/run/blkid",
+	//		"/run/events.json",
+	//		"/run/cmdline",
+	//	})
 }
 
 func startVM() VM {

@@ -23,7 +23,9 @@ var _ = Describe("kairos bundles test", Label("bundles-test"), func() {
 
 	AfterEach(func() {
 		if CurrentGinkgoTestDescription().Failed {
-			gatherLogs()
+			vm.Destroy(func(vm VM) {
+				gatherLogs(vm)
+			})
 		}
 	})
 
