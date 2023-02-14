@@ -27,7 +27,7 @@ var _ = Describe("kairos autoinstall test", Label("autoinstall-test"), func() {
 
 	AfterEach(func() {
 		if CurrentGinkgoTestDescription().Failed {
-			gatherLogs()
+			gatherLogs(vm)
 		}
 	})
 
