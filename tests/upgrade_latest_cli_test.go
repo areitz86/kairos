@@ -16,14 +16,15 @@ var _ = Describe("k3s upgrade manual test", Label("upgrade-latest-with-cli"), fu
 	containerImage := os.Getenv("CONTAINER_IMAGE")
 
 	BeforeEach(func() {
-
-		vm = startVM()
+		_, vm = startVM()
 		vm.EventuallyConnects(1200)
+	})
 
+	AfterEach(func() {
+		Expect(vm.Destroy(nil)).ToNot(HaveOccurred())
 	})
 
 	Context("live cd", func() {
-
 		It("has default service active", func() {
 			if containerImage == "" {
 				Fail("CONTAINER_IMAGE needs to be set")
@@ -47,21 +48,24 @@ var _ = Describe("k3s upgrade manual test", Label("upgrade-latest-with-cli"), fu
 
 	Context("install", func() {
 		It("to disk with custom config", func() {
-			err := Machine.SendFile("assets/config.yaml", "/tmp/config.yaml", "0770")
+			err := vm.Scp("assets/config.yaml", "/tmp/config.yaml", "0770")
 			Expect(err).ToNot(HaveOccurred())
 
 			out, _ := vm.Sudo("kairos-agent manual-install --device auto /tmp/config.yaml")
 			Expect(out).Should(ContainSubstring("Running after-install hook"))
 			fmt.Println(out)
 			vm.Sudo("sync")
-			detachAndReboot()
+
+			err = vm.DetachCD()
+			Expect(err).ToNot(HaveOccurred())
+			vm.Reboot()
 		})
 	})
 
 	Context("upgrades", func() {
 		It("can upgrade to current image", func() {
 
-			currentVersion, err := Machine.Command("source /etc/os-release; echo $VERSION")
+			currentVersion, err := vm.Sudo("source /etc/os-release; echo $VERSION")
 			Expect(err).ToNot(HaveOccurred())
 			Expect(currentVersion).To(ContainSubstring("v"))
 			_, err = vm.Sudo("kairos-agent")
@@ -82,7 +86,7 @@ var _ = Describe("k3s upgrade manual test", Label("upgrade-latest-with-cli"), fu
 			vm.Reboot()
 
 			Eventually(func() error {
-				_, err := Machine.Command("source /etc/os-release; echo $VERSION")
+				_, err := vm.Sudo("source /etc/os-release; echo $VERSION")
 				return err
 			}, 10*time.Minute, 10*time.Second).ShouldNot(HaveOccurred())
 

@@ -17,16 +17,14 @@ var _ = Describe("kairos bundles test", Label("bundles-test"), func() {
 		if os.Getenv("CLOUD_INIT") == "" || !filepath.IsAbs(os.Getenv("CLOUD_INIT")) {
 			Fail("CLOUD_INIT must be set and must be pointing to a file as an absolute path")
 		}
-		vm = startVM()
+		_, vm = startVM()
 		vm.EventuallyConnects(1200)
 	})
 
 	AfterEach(func() {
-		if CurrentGinkgoTestDescription().Failed {
-			vm.Destroy(func(vm VM) {
-				gatherLogs(vm)
-			})
-		}
+		vm.Destroy(func(vm VM) {
+			gatherLogs(vm)
+		})
 	})
 
 	Context("live cd", func() {

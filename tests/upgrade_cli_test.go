@@ -16,8 +16,12 @@ var _ = Describe("k3s upgrade manual test", Label("upgrade-with-cli"), func() {
 
 	var vm VM
 	BeforeEach(func() {
-		vm = startVM()
+		_, vm = startVM()
 		vm.EventuallyConnects(1200)
+	})
+
+	AfterEach(func() {
+		Expect(vm.Destroy(nil)).ToNot(HaveOccurred())
 	})
 
 	Context("live cd", func() {
@@ -33,7 +37,7 @@ var _ = Describe("k3s upgrade manual test", Label("upgrade-with-cli"), func() {
 				Expect(out).Should(ContainSubstring("kairos-agent"))
 			} else {
 				// Eventually(func() string {
-				// 	out, _ := Machine.Command("sudo systemctl status kairos-agent")
+				// 	out, _ := vm.Sudo("sudo systemctl status kairos-agent")
 				// 	return out
 				// }, 30*time.Second, 10*time.Second).Should(ContainSubstring("no network token"))
 
@@ -58,8 +62,7 @@ var _ = Describe("k3s upgrade manual test", Label("upgrade-with-cli"), func() {
 
 	Context("upgrades", func() {
 		It("can upgrade to current image", func() {
-
-			currentVersion, err := Machine.Command("source /etc/os-release; echo $VERSION")
+			currentVersion, err := vm.Sudo("source /etc/os-release; echo $VERSION")
 			Expect(err).ToNot(HaveOccurred())
 			Expect(currentVersion).To(ContainSubstring("v"))
 			_, err = vm.Sudo("kairos-agent")
@@ -80,7 +83,7 @@ var _ = Describe("k3s upgrade manual test", Label("upgrade-with-cli"), func() {
 			vm.Reboot()
 
 			Eventually(func() error {
-				_, err := Machine.Command("source /etc/os-release; echo $VERSION")
+				_, err := vm.Sudo("source /etc/os-release; echo $VERSION")
 				return err
 			}, 10*time.Minute, 10*time.Second).ShouldNot(HaveOccurred())
 

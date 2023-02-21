@@ -24,16 +24,6 @@ func TestSuite(t *testing.T) {
 	RunSpecs(t, "kairos Test Suite")
 }
 
-func detachAndReboot() {
-	vbox, ok := Machine.(*machine.VBox)
-	if ok {
-		vbox.DetachCD()
-		vbox.Restart()
-	} else {
-		Reboot()
-	}
-}
-
 var tempDir string
 var sshPort string
 
@@ -70,10 +60,6 @@ func pass() string {
 	return pass
 }
 
-var _ = BeforeSuite(func() {
-
-})
-
 func gatherLogs(vm VM) {
 	vm.Sudo("k3s kubectl get pods -A -o json > /run/pods.json")
 	vm.Sudo("k3s kubectl get events -A -o json > /run/events.json")
@@ -105,7 +91,7 @@ func gatherLogs(vm VM) {
 	//	})
 }
 
-func startVM() VM {
+func startVM() (context.Context, VM) {
 	if os.Getenv("ISO") == "" && os.Getenv("CREATE_VM") == "true" {
 		fmt.Println("ISO missing")
 		os.Exit(1)
@@ -166,7 +152,7 @@ func startVM() VM {
 
 		// You can connect to it with "spicy" or other tool.
 		// DISPLAY is already taken on Linux X sessions
-		if os.Getenv("MACHINE_DISPLAY") == "true" {
+		if os.Getenv("MACHINE_SPICY") != "" {
 			spicePort, _ = getFreePort()
 			for spicePort == sshPort { // avoid collision
 				spicePort, _ = getFreePort()
@@ -174,6 +160,11 @@ func startVM() VM {
 			display := fmt.Sprintf("-vga qxl -spice port=%d,addr=127.0.0.1,disable-ticketing=yes", spicePort)
 			opts = append(opts, types.WithDisplay(display))
 
+			cmd := exec.Command("spicy",
+				"-h", "127.0.0.1",
+				"-p", strconv.Itoa(spicePort))
+			err = cmd.Start()
+			Expect(err).ToNot(HaveOccurred())
 		}
 	} else {
 		opts = append(opts, types.VBoxEngine)
@@ -183,18 +174,10 @@ func startVM() VM {
 
 	vm := NewVM(m, stateDir)
 
-	err = vm.Start(context.Background())
+	ctx, err := vm.Start(context.Background())
 	Expect(err).ToNot(HaveOccurred())
 
-	if os.Getenv("MACHINE_SPICY") != "" {
-		cmd := exec.Command("spicy",
-			"-h", "127.0.0.1",
-			"-p", strconv.Itoa(spicePort))
-		err = cmd.Start()
-		Expect(err).ToNot(HaveOccurred())
-	}
-
-	return vm
+	return ctx, vm
 }
 
 func isFlavor(flavor string) bool {

@@ -20,15 +20,17 @@ var _ = Describe("kairos autoinstall test", Label("autoinstall-test"), func() {
 			Fail("CLOUD_INIT must be set and must be pointing to a file as an absolute path")
 		}
 
-		vm = startVM()
+		_, vm = startVM()
 		vm.EventuallyConnects(1200)
-
 	})
 
 	AfterEach(func() {
-		if CurrentGinkgoTestDescription().Failed {
+		if CurrentSpecReport().Failed() {
 			gatherLogs(vm)
 		}
+
+		err := vm.Destroy(nil)
+		Expect(err).ToNot(HaveOccurred())
 	})
 
 	Context("live cd", func() {
@@ -87,7 +89,7 @@ var _ = Describe("kairos autoinstall test", Label("autoinstall-test"), func() {
 	Context("reboots and passes functional tests", func() {
 		It("has grubenv file", func() {
 			out, err := vm.Sudo("cat /oem/grubenv")
-			Expect(err).ToNot(HaveOccurred())
+			Expect(err).ToNot(HaveOccurred(), out)
 			Expect(out).To(ContainSubstring("foobarzz"))
 
 		})

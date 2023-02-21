@@ -54,12 +54,12 @@ var _ = Describe("kairos install test", Label("install-test"), func() {
 	var vm VM
 	BeforeEach(func() {
 
-		vm = startVM()
+		_, vm = startVM()
 		vm.EventuallyConnects(1200)
 	})
 
 	AfterEach(func() {
-		vm.Destroy(func(vm VM) {})
+		Expect(vm.Destroy(nil)).ToNot(HaveOccurred())
 	})
 
 	Context("install", func() {

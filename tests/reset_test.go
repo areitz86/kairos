@@ -18,8 +18,12 @@ var _ = Describe("kairos reset test", Label("reset-test"), func() {
 			Fail("CLOUD_INIT must be set and must be pointing to a file as an absolute path")
 		}
 
-		vm = startVM()
+		_, vm = startVM()
 		vm.EventuallyConnects(1200)
+	})
+
+	AfterEach(func() {
+		Expect(vm.Destroy(nil)).ToNot(HaveOccurred())
 	})
 
 	Context("live cd", func() {
