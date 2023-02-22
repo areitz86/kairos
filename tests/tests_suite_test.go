@@ -157,7 +157,7 @@ func startVM() (context.Context, VM) {
 			for spicePort == sshPort { // avoid collision
 				spicePort, _ = getFreePort()
 			}
-			display := fmt.Sprintf("-vga qxl -spice port=%d,addr=127.0.0.1,disable-ticketing=yes", spicePort)
+			display := fmt.Sprintf("-spice port=%d,addr=127.0.0.1,disable-ticketing=yes", spicePort)
 			opts = append(opts, types.WithDisplay(display))
 
 			cmd := exec.Command("spicy",

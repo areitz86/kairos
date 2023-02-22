@@ -88,8 +88,8 @@ var _ = Describe("kairos reset test", Label("reset-test"), func() {
 			_, err = vm.Sudo("touch /oem/test")
 			Expect(err).ToNot(HaveOccurred())
 
-			HasFile("/oem/test")
-			HasFile("/usr/local/test")
+			vm.HasFile("/oem/test")
+			vm.HasFile("/usr/local/test")
 
 			_, err = vm.Sudo("grub2-editenv /oem/grubenv set next_entry=statereset")
 			Expect(err).ToNot(HaveOccurred())

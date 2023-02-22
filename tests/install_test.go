@@ -14,13 +14,11 @@ import (
 
 var stateAssertVM = func(vm VM, query, expected string) {
 	out, err := vm.Sudo(fmt.Sprintf("kairos-agent state get %s", query))
-	ExpectWithOffset(1, err).ToNot(HaveOccurred())
+	ExpectWithOffset(1, err).ToNot(HaveOccurred(), out)
 	ExpectWithOffset(1, out).To(ContainSubstring(expected))
 }
 
 func testInstall(cloudConfig string, vm VM) { //, actual interface{}, m types.GomegaMatcher) {
-	out, _ := vm.Sudo(fmt.Sprintf("kairos-agent state get persistent.found"))
-	fmt.Printf("persistent.found: %s\n", out)
 	stateAssertVM(vm, "persistent.found", "false")
 
 	t, err := os.CreateTemp("", "test")
@@ -33,7 +31,7 @@ func testInstall(cloudConfig string, vm VM) { //, actual interface{}, m types.Go
 	err = vm.Scp(t.Name(), "/tmp/config.yaml", "0770")
 	Expect(err).ToNot(HaveOccurred())
 
-	out, err = vm.Sudo(`kairos-agent manual-install --device "auto" /tmp/config.yaml`)
+	out, err := vm.Sudo(`kairos-agent manual-install --device "auto" /tmp/config.yaml`)
 	Expect(err).ToNot(HaveOccurred(), out)
 	Expect(out).Should(ContainSubstring("Running after-install hook"))
 	vm.Sudo("sync")
@@ -63,7 +61,6 @@ var _ = Describe("kairos install test", Label("install-test"), func() {
 	})
 
 	Context("install", func() {
-
 		It("cloud-config syntax mixed with extended syntax", func() {
 			testInstall(`#cloud-config
 install:
@@ -89,7 +86,6 @@ bundles:
   targets:
   - container://quay.io/mocaccino/extra:edgevpn-utils-0.15.0
 `, vm)
-			fmt.Println("Installation succeeded")
 
 			Eventually(func() string {
 				out, _ := vm.Sudo("cat /etc/foo")
@@ -116,8 +112,6 @@ bundles:
 		It("with config_url", func() {
 
 			testInstall(`config_url: "https://gist.githubusercontent.com/mudler/6db795bad8f9e29ebec14b6ae331e5c0/raw/01137c458ad62cfcdfb201cae2f8814db702c6f9/testgist.yaml"`, vm)
-
-			fmt.Println("Installation with config_url succeeded")
 
 			Eventually(func() string {
 				out, _ := vm.Sudo("/usr/local/bin/usr/bin/edgevpn --help | grep peer")

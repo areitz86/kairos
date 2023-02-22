@@ -46,25 +46,23 @@ var _ = Describe("k3s upgrade manual test", Label("upgrade-latest-with-cli"), fu
 		})
 	})
 
-	Context("install", func() {
-		It("to disk with custom config", func() {
+	Context("upgrades", func() {
+		BeforeEach(func() {
 			err := vm.Scp("assets/config.yaml", "/tmp/config.yaml", "0770")
 			Expect(err).ToNot(HaveOccurred())
 
-			out, _ := vm.Sudo("kairos-agent manual-install --device auto /tmp/config.yaml")
+			out, err := vm.Sudo("/bin/bash -c 'set -o pipefail && kairos-agent manual-install --device auto /tmp/config.yaml 2>&1 | tee manual-install.txt'")
+			Expect(err).ToNot(HaveOccurred(), out)
+
 			Expect(out).Should(ContainSubstring("Running after-install hook"))
-			fmt.Println(out)
 			vm.Sudo("sync")
 
 			err = vm.DetachCD()
 			Expect(err).ToNot(HaveOccurred())
 			vm.Reboot()
 		})
-	})
 
-	Context("upgrades", func() {
 		It("can upgrade to current image", func() {
-
 			currentVersion, err := vm.Sudo("source /etc/os-release; echo $VERSION")
 			Expect(err).ToNot(HaveOccurred())
 			Expect(currentVersion).To(ContainSubstring("v"))
