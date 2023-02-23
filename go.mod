@@ -26,7 +26,7 @@ require (
 	github.com/pterm/pterm v0.12.54
 	github.com/qeesung/image2ascii v1.0.1
 	github.com/santhosh-tekuri/jsonschema/v5 v5.2.0
-	github.com/spectrocloud/peg v0.0.0-20230223070442-b0e13f5b7c0a
+	github.com/spectrocloud/peg v0.0.0-20230223101503-ed77e362cd92
 	github.com/swaggest/jsonschema-go v0.3.47
 	github.com/twpayne/go-vfs v1.7.2
 	github.com/urfave/cli/v2 v2.24.3
@@ -97,6 +97,7 @@ require (
 	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e // indirect
 	github.com/stretchr/objx v0.5.0 // indirect
 	github.com/swaggest/refl v1.1.0 // indirect
+	github.com/urfave/cli v1.22.12 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
 	github.com/wayneashleyberry/terminal-dimensions v1.1.0 // indirect

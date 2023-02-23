@@ -1,7 +1,6 @@
 package mos_test
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"time"
@@ -26,51 +25,13 @@ var _ = Describe("kairos reset test", Label("reset-test"), func() {
 		Expect(vm.Destroy(nil)).ToNot(HaveOccurred())
 	})
 
-	Context("live cd", func() {
-		It("has default service active", func() {
-			if isFlavor("alpine") {
-				out, _ := vm.Sudo("rc-status")
-				Expect(out).Should(ContainSubstring("kairos"))
-				Expect(out).Should(ContainSubstring("kairos-agent"))
-				fmt.Println(out)
-			} else {
-				// Eventually(func() string {
-				// 	out, _ := Machine.Command("sudo systemctl status kairososososos-agent")
-				// 	return out
-				// }, 30*time.Second, 10*time.Second).Should(ContainSubstring("no network token"))
-
-				out, _ := vm.Sudo("systemctl status kairos")
-				Expect(out).Should(ContainSubstring("loaded (/etc/systemd/system/kairos.service; enabled;"))
-				fmt.Println(out)
-			}
-
-			out, _ := vm.Sudo("ls -liah /oem")
-			fmt.Println(out)
-			//	Expect(out).To(ContainSubstring("userdata.yaml"))
-			out, _ = vm.Sudo("cat /oem/userdata")
-			fmt.Println(out)
-			out, _ = vm.Sudo("ps aux")
-			fmt.Println(out)
-
-			out, _ = vm.Sudo("lsblk")
-			fmt.Println(out)
-
+	Context("auto installs, reboots and passes functional tests", func() {
+		BeforeEach(func() {
+			expectDefaultService(vm)
+			expectStartedInstallation(vm)
+			expectRebootedToActive(vm)
 		})
-	})
 
-	Context("auto installs", func() {
-		It("to disk with custom config", func() {
-			Eventually(func() string {
-				out, _ := vm.Sudo("ps aux")
-				return out
-			}, 30*time.Minute, 1*time.Second).Should(
-				Or(
-					ContainSubstring("elemental install"),
-				))
-		})
-	})
-
-	Context("reboots and passes functional tests", func() {
 		It("has grubenv file", func() {
 			Eventually(func() string {
 				out, _ := vm.Sudo("cat /oem/grubenv")

@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	process "github.com/mudler/go-processmanager"
@@ -182,4 +183,42 @@ func startVM() (context.Context, VM) {
 
 func isFlavor(flavor string) bool {
 	return strings.Contains(os.Getenv("FLAVOR"), flavor)
+}
+
+func expectDefaultService(vm VM) {
+	By("checking if default service is active in live cd mode", func() {
+		if isFlavor("alpine") {
+			out, _ := vm.Sudo("rc-status")
+			Expect(out).Should(ContainSubstring("kairos"))
+			Expect(out).Should(ContainSubstring("kairos-agent"))
+		} else {
+			out, err := vm.Sudo("systemctl status kairos")
+			Expect(err).ToNot(HaveOccurred(), out)
+			Expect(out).Should(ContainSubstring("loaded (/etc/systemd/system/kairos.service; enabled;"))
+		}
+	})
+}
+
+func expectStartedInstallation(vm VM) {
+	By("checking that installation has started", func() {
+		Eventually(func() string {
+			out, _ := vm.Sudo("ps aux")
+			return out
+		}, 30*time.Minute, 1*time.Second).Should(
+			Or(
+				ContainSubstring("elemental install"),
+			))
+	})
+}
+
+func expectRebootedToActive(vm VM) {
+	By("checking that vm has rebooted to 'active'", func() {
+		Eventually(func() string {
+			out, _ := vm.Sudo("kairos-agent state boot")
+			return out
+		}, 40*time.Minute, 10*time.Second).Should(
+			Or(
+				ContainSubstring("active_boot"),
+			))
+	})
 }

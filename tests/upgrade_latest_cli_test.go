@@ -24,30 +24,10 @@ var _ = Describe("k3s upgrade manual test", Label("upgrade-latest-with-cli"), fu
 		Expect(vm.Destroy(nil)).ToNot(HaveOccurred())
 	})
 
-	Context("live cd", func() {
-		It("has default service active", func() {
-			if containerImage == "" {
-				Fail("CONTAINER_IMAGE needs to be set")
-			}
-
-			if isFlavor("alpine") {
-				out, _ := vm.Sudo("rc-status")
-				Expect(out).Should(ContainSubstring("kairos"))
-				Expect(out).Should(ContainSubstring("kairos-agent"))
-			} else {
-				// Eventually(func() string {
-				// 	out, _ := machine.SSHCommand("sudo systemctl status kairos-agent")
-				// 	return out
-				// }, 30*time.Second, 10*time.Second).Should(ContainSubstring("no network token"))
-
-				out, _ := vm.Sudo("systemctl status kairos")
-				Expect(out).Should(ContainSubstring("loaded (/etc/systemd/system/kairos.service; enabled"))
-			}
-		})
-	})
-
 	Context("upgrades", func() {
 		BeforeEach(func() {
+			expectDefaultService(vm)
+
 			err := vm.Scp("assets/config.yaml", "/tmp/config.yaml", "0770")
 			Expect(err).ToNot(HaveOccurred())
 
@@ -78,7 +58,6 @@ var _ = Describe("k3s upgrade manual test", Label("upgrade-latest-with-cli"), fu
 				Expect(err).ToNot(HaveOccurred(), string(out))
 				Expect(out).To(ContainSubstring("Upgrade completed"))
 				Expect(out).To(ContainSubstring(containerImage))
-				fmt.Println(out)
 			}
 
 			vm.Reboot()

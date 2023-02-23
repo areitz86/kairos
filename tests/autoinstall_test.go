@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
-	"time"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -33,65 +31,11 @@ var _ = Describe("kairos autoinstall test", Label("autoinstall-test"), func() {
 		Expect(err).ToNot(HaveOccurred())
 	})
 
-	Context("live cd", func() {
-		It("has default service active", func() {
-			if strings.Contains(os.Getenv("FLAVOR"), "alpine") {
-				out, _ := vm.Sudo("rc-status")
-				Expect(out).Should(ContainSubstring("kairos"))
-				Expect(out).Should(ContainSubstring("kairos-agent"))
-				fmt.Println(out)
-			} else {
-				// Eventually(func() string {
-				// 	out, _ := machine.Command("sudo systemctl status kairososososos-agent")
-				// 	return out
-				// }, 30*time.Second, 10*time.Second).Should(ContainSubstring("no network token"))
-
-				out, _ := vm.Sudo("systemctl status kairos")
-				Expect(out).Should(ContainSubstring("loaded (/etc/systemd/system/kairos.service; enabled;"))
-				fmt.Println(out)
-			}
-
-			// Debug output
-			out, _ := vm.Sudo("ls -liah /oem")
-			fmt.Println(out)
-			//	Expect(out).To(ContainSubstring("userdata.yaml"))
-			out, _ = vm.Sudo("cat /oem/userdata")
-			fmt.Println(out)
-			out, _ = vm.Sudo("sudo ps aux")
-			fmt.Println(out)
-
-			out, _ = vm.Sudo("sudo lsblk")
-			fmt.Println(out)
-		})
-	})
-
-	Context("auto installs", func() {
-		It("to disk with custom config", func() {
-			Eventually(func() string {
-				out, _ := vm.Sudo("ps aux")
-				return out
-			}, 30*time.Minute, 1*time.Second).Should(
-				Or(
-					ContainSubstring("elemental install"),
-				))
-		})
-		It("reboots to active", func() {
-			Eventually(func() string {
-				out, _ := vm.Sudo("kairos-agent state boot")
-				return out
-			}, 40*time.Minute, 10*time.Second).Should(
-				Or(
-					ContainSubstring("active_boot"),
-				))
-		})
-	})
-
 	Context("reboots and passes functional tests", func() {
 		BeforeEach(func() {
-			Eventually(func() string {
-				out, _ := vm.Sudo("kairos-agent state boot")
-				return out
-			}, 40*time.Minute, 10*time.Second).Should(ContainSubstring("active_boot"))
+			expectDefaultService(vm)
+			expectStartedInstallation(vm)
+			expectRebootedToActive(vm)
 		})
 
 		It("has grubenv file", func() {
