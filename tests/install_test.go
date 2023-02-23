@@ -13,7 +13,7 @@ import (
 	"github.com/onsi/gomega/types"
 )
 
-func testInstall(cloudConfig string) { //, actual interface{}, m types.GomegaMatcher) {
+func testInstall(cloudConfig string) string { //, actual interface{}, m types.GomegaMatcher) {
 	out, _ := Sudo(fmt.Sprintf("kairos-agent state get persistent.found"))
 	fmt.Printf("persistent.found: %s\n", out)
 	stateAssert("persistent.found", "false")
@@ -35,6 +35,8 @@ func testInstall(cloudConfig string) { //, actual interface{}, m types.GomegaMat
 
 	detachAndReboot()
 	EventuallyConnects(1200)
+
+	return out
 }
 
 func eventuallyAssert(cmd string, m types.GomegaMatcher) {
@@ -59,7 +61,7 @@ var _ = Describe("kairos install test", Label("install-test"), func() {
 	Context("install", func() {
 
 		It("cloud-config syntax mixed with extended syntax", func() {
-			testInstall(`#cloud-config
+			_ = testInstall(`#cloud-config
 install:
   bind_mounts:
   - /mnt/bind1
@@ -107,16 +109,27 @@ bundles:
 			stateAssert("persistent.found", "true")
 		})
 
-		It("with config_url", func() {
+		Context("with config_url", func() {
+			It("succeeds when config_url is accessible", func() {
+				testInstall(`config_url: "https://gist.githubusercontent.com/mudler/6db795bad8f9e29ebec14b6ae331e5c0/raw/01137c458ad62cfcdfb201cae2f8814db702c6f9/testgist.yaml"`)
 
-			testInstall(`config_url: "https://gist.githubusercontent.com/mudler/6db795bad8f9e29ebec14b6ae331e5c0/raw/01137c458ad62cfcdfb201cae2f8814db702c6f9/testgist.yaml"`)
+				Eventually(func() string {
+					out, _ := Sudo("/usr/local/bin/usr/bin/edgevpn --help | grep peer")
+					return out
+				}, 5*time.Minute, 10*time.Second).Should(ContainSubstring("peerguard"))
+			})
 
-			fmt.Println("Installation with config_url succeeded")
+			FIt("succeeds when config_url is not accessible (and prints a warning)", func() {
+				out := testInstall(`config_url: "https://thisurldoesntexist.org"`)
 
-			Eventually(func() string {
-				out, _ := Sudo("/usr/local/bin/usr/bin/edgevpn --help | grep peer")
-				return out
-			}, 5*time.Minute, 10*time.Second).Should(ContainSubstring("peerguard"))
+				Eventually(func() string {
+					out, _ := Sudo("/usr/local/bin/usr/bin/edgevpn --help | grep peer")
+					return out
+				}, 5*time.Minute, 10*time.Second).Should(ContainSubstring("peerguard"))
+
+				Expect(out).ToNot(ContainSubstring("kairos-agent.service: Failed with result"))
+				Expect(out).To(ContainSubstring("WARNING: Couldn't fetch config_url: could not merge configs"))
+			})
 		})
 	})
 })
