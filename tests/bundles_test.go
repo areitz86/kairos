@@ -60,8 +60,8 @@ var _ = Describe("kairos bundles test", Label("bundles-test"), func() {
 		})
 	})
 
-	Context("auto installs", func() {
-		It("to disk with custom config", func() {
+	Context("reboots and passes functional tests", func() {
+		BeforeEach(func() {
 			Eventually(func() string {
 				out, _ := vm.Sudo("ps aux")
 				return out
@@ -70,9 +70,6 @@ var _ = Describe("kairos bundles test", Label("bundles-test"), func() {
 					ContainSubstring("elemental install"),
 				))
 		})
-	})
-
-	Context("reboots and passes functional tests", func() {
 
 		It("has grubenv file", func() {
 			By("checking after-install hook triggered")
@@ -98,13 +95,6 @@ var _ = Describe("kairos bundles test", Label("bundles-test"), func() {
 		})
 
 		It("has kubo extension", func() {
-			// Eventually(func() string {
-			// 	out, _ := Sudo("systemd-sysext")
-			// 	return out
-			// }, 40*time.Minute, 1*time.Second).Should(
-			// 	Or(
-			// 		ContainSubstring("kubo"),
-			// 	))
 			syset, err := vm.Sudo("systemd-sysext")
 			ls, _ := vm.Sudo("ls -liah /usr/local/lib/extensions")
 			fmt.Println("LS:", ls)

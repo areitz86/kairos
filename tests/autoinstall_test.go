@@ -87,11 +87,17 @@ var _ = Describe("kairos autoinstall test", Label("autoinstall-test"), func() {
 	})
 
 	Context("reboots and passes functional tests", func() {
+		BeforeEach(func() {
+			Eventually(func() string {
+				out, _ := vm.Sudo("kairos-agent state boot")
+				return out
+			}, 40*time.Minute, 10*time.Second).Should(ContainSubstring("active_boot"))
+		})
+
 		It("has grubenv file", func() {
 			out, err := vm.Sudo("cat /oem/grubenv")
 			Expect(err).ToNot(HaveOccurred(), out)
 			Expect(out).To(ContainSubstring("foobarzz"))
-
 		})
 
 		It("has custom cmdline", func() {

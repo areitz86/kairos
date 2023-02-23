@@ -25,7 +25,6 @@ var _ = Describe("k3s upgrade manual test", Label("upgrade-with-cli"), func() {
 	})
 
 	Context("live cd", func() {
-
 		It("has default service active", func() {
 			if containerImage == "" {
 				Fail("CONTAINER_IMAGE needs to be set")
@@ -47,8 +46,8 @@ var _ = Describe("k3s upgrade manual test", Label("upgrade-with-cli"), func() {
 		})
 	})
 
-	Context("install", func() {
-		It("to disk with custom config", func() {
+	Context("upgrades", func() {
+		BeforeEach(func() {
 			err := vm.Scp("assets/config.yaml", "/tmp/config.yaml", "0770")
 			Expect(err).ToNot(HaveOccurred())
 
@@ -58,9 +57,7 @@ var _ = Describe("k3s upgrade manual test", Label("upgrade-with-cli"), func() {
 			vm.Sudo("sync")
 			vm.Reboot()
 		})
-	})
 
-	Context("upgrades", func() {
 		It("can upgrade to current image", func() {
 			currentVersion, err := vm.Sudo("source /etc/os-release; echo $VERSION")
 			Expect(err).ToNot(HaveOccurred())
