@@ -73,7 +73,7 @@ var _ = Describe("kairos autoinstall test", Label("autoinstall-test"), func() {
 				_, err := vm.Sudo("echo 'foo' > /tmp/bar")
 				Expect(err).ToNot(HaveOccurred())
 
-				out, err := Machine.Command("sudo cat /tmp/bar")
+				out, err := vm.Sudo("sudo cat /tmp/bar")
 				Expect(err).ToNot(HaveOccurred())
 
 				Expect(out).To(ContainSubstring("foo"))
